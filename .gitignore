@@ -1,10 +1,10 @@
-/ratchetexperiment
-/ratchetExperiment/.vscode
-/ratchetExperiment/.espressif
-/ratchetExperiment/.embuild
+
+/ratchetexperiment/.vscode
+/ratchetexperiment/.espressif
+/ratchetexperiment/.embuild
 donk
-/ratchetExperiment/target
-/ratchetExperiment/Cargo.lock
-/ratchetExperiment/ratchetexperiment/
+/ratchetexperiment/target
+/ratchetexperiment/Cargo.lock
+/ratchetexperiment/ratchetexperiment/
 /server/target/debug
 **/*.rs.bk

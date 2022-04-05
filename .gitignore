@@ -1,6 +1,7 @@
 /ratchetExperiment/.vscode
 /ratchetExperiment/.espressif
-/.embuild
+/ratchetExperiment/.embuild
+donk
 /ratchetExperiment/target
 /ratchetExperiment/Cargo.lock
 /ratchetExperiment/ratchetexperiment/

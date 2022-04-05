@@ -1,0 +1,8 @@
+/ratchetExperiment/.vscode
+/ratchetExperiment/.espressif
+/.embuild
+/ratchetExperiment/target
+/ratchetExperiment/Cargo.lock
+/ratchetExperiment/ratchetexperiment/
+/server/target/debug
+**/*.rs.bk

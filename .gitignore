@@ -1,10 +1,9 @@
 
-/ratchetexperiment/.vscode
-/ratchetexperiment/.espressif
-/ratchetexperiment/.embuild
+/esp32client/.vscode
+/esp32client/.espressif
+/esp32client/.embuild
 donk
-/ratchetexperiment/target
-/ratchetexperiment/Cargo.lock
-/ratchetexperiment/ratchetexperiment/
+/esp32client/target
+/esp32client/Cargo.lock
 /server/target/debug
 **/*.rs.bk

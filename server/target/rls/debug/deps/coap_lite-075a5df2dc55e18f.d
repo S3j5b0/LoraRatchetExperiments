@@ -1,0 +1,14 @@
+/home/ask/Notes/rust/serverClient/server/target/rls/debug/deps/coap_lite-075a5df2dc55e18f.rmeta: /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/lib.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/error.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/header.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/link_format.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/log.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/observe.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/option_value.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/packet.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/request.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/response.rs
+
+/home/ask/Notes/rust/serverClient/server/target/rls/debug/deps/coap_lite-075a5df2dc55e18f.d: /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/lib.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/error.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/header.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/link_format.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/log.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/observe.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/option_value.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/packet.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/request.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/response.rs
+
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/lib.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/error.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/header.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/link_format.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/log.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/observe.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/option_value.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/packet.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/request.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/coap-lite-0.8.1/src/response.rs:

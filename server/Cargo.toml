@@ -1,0 +1,18 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+twoRatchet =  { path = "/home/ask/Git/Double_ratchet/twoRatchet" }
+
+oscore  = { path = "/home/ask/Git/myoscore/" }
+coap-lite = { version = "0.8.1", default-features = false }
+serde = { version = "1.0.97", default-features = false, features = ["derive", "alloc"] }
+serde_cbor = { version = "0.11.2", default-features = false, features = ["alloc"] }
+serde_bytes = { version = "0.11.1", default-features = false, features = ["alloc"] }
+x25519-dalek-ng = { version = "1.1.1", default-features = false, features = ["u32_backend"] }
+rand_core = {version = "0.6"}
+rand = "*"

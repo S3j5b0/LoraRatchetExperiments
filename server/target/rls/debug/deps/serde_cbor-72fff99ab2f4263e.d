@@ -1,0 +1,14 @@
+/home/ask/Notes/rust/serverClient/server/target/rls/debug/deps/serde_cbor-72fff99ab2f4263e.rmeta: /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/lib.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/de.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/error.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/read.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/ser.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/tags.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/write.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/mod.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/de.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/ser.rs
+
+/home/ask/Notes/rust/serverClient/server/target/rls/debug/deps/serde_cbor-72fff99ab2f4263e.d: /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/lib.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/de.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/error.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/read.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/ser.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/tags.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/write.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/mod.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/de.rs /home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/ser.rs
+
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/lib.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/de.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/error.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/read.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/ser.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/tags.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/write.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/mod.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/de.rs:
+/home/ask/.cargo/registry/src/github.com-1ecc6299db9ec823/serde_cbor-0.11.2/src/value/ser.rs:

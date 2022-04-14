@@ -1,7 +1,7 @@
 [package]
-name = "experiment"
+name = "esp32EndDevice"
 version = "0.23.0"
-authors = ["garse"]
+authors = ["Ask Sejsbo"]
 edition = "2018"
 categories = ["embedded", "hardware-support"]
 keywords = ["embedded", "svc", "idf", "esp-idf", "esp32"]
@@ -21,7 +21,7 @@ getrandom = { version = "0.2", git = "https://github.com/esp-rs-compat/getrandom
 opt-level = "s"
 
 [profile.dev]
-debug = true # Symbols are nice and they don't increase the size on Flash
+debug = true 
 opt-level = "z"
 
 [features]

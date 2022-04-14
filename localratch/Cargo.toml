@@ -1,0 +1,36 @@
+[package]
+name = "esp-lora"
+version = "0.1.0"
+authors = ["daca <daca@itu.dk>"]
+edition = "2018"
+resolver = "2"
+
+[profile.release]
+opt-level = "s"
+
+[profile.dev]
+debug = true # Symbols are nice and they don't increase the size on Flash
+opt-level = "z"
+
+[features]
+default = ["native"]
+native = ["esp-idf-sys/native"]
+
+[dependencies]
+esp-idf-sys = { version = "0.30.6", features = ["binstart"] }
+esp-idf-hal = "0.33.1"
+embedded-hal = "=1.0.0-alpha.7"
+oscore  = { path = "/home/ask/Git/myoscore/" }
+coap-lite = { version = "0.8.1", default-features = false }
+serde = { version = "1.0.97", default-features = false, features = ["derive", "alloc"] }
+serde_cbor = { version = "0.11.2", default-features = false, features = ["alloc"] }
+serde_bytes = { version = "0.11.1", default-features = false, features = ["alloc"] }
+x25519-dalek-ng = { version = "1.1.1", default-features = false, features = ["u32_backend"] }
+twoRatchet =  { path = "/home/ask/Git/Double_ratchet/twoRatchet" }
+esp-idf-svc = "0.37.2"
+embedded-svc = "0.19.1"
+rand_core = {version = "0.6"}
+rand = "*"
+[build-dependencies]
+embuild = "0.28"
+anyhow = "1"

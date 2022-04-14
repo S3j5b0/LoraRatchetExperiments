@@ -1,35 +1,14 @@
-#![allow(clippy::single_component_path_imports)]
-//#![feature(backtrace)]
 
-#[cfg(all(feature = "qemu", not(esp32)))]
-compile_error!("The `qemu` feature can only be built for the `xtensa-esp32-espidf` target.");
 
-#[cfg(all(feature = "ip101", not(esp32)))]
-compile_error!("The `ip101` feature can only be built for the `xtensa-esp32-espidf` target.");
 
-#[cfg(all(feature = "kaluga", not(esp32s2)))]
-compile_error!("The `kaluga` feature can only be built for the `xtensa-esp32s2-espidf` target.");
-
-#[cfg(all(feature = "ttgo", not(esp32)))]
-compile_error!("The `ttgo` feature can only be built for the `xtensa-esp32-espidf` target.");
-
-#[cfg(all(feature = "heltec", not(esp32)))]
-compile_error!("The `heltec` feature can only be built for the `xtensa-esp32-espidf` target.");
-
-#[cfg(all(feature = "esp32s3_usb_otg", not(esp32s3)))]
-compile_error!(
-    "The `esp32s3_usb_otg` feature can only be built for the `xtensa-esp32s3-espidf` target."
-);
 extern crate  alloc;
-use rand::{rngs};
 
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::{cell::RefCell, env,  sync::Arc, thread, time::*};
-use std::convert::TryInto;
+use std::net::{ TcpStream};
+use std::{env,  sync::Arc, thread};
 use std::time::Duration;
-use anyhow::bail;
 
+use core::convert::TryInto;
 
 use embedded_svc::httpd::*;
 use embedded_svc::ipv4;
@@ -44,33 +23,29 @@ use esp_idf_svc::ping;
 use esp_idf_svc::sysloop::*;
 
 use esp_idf_svc::wifi::*;
-
-use esp_idf_hal::prelude::*;
-
-use esp_idf_sys::{self,c_types};
-
 use oscore::edhoc::{
     error::{OwnError, OwnOrPeerError},
-    PartyI, PartyR,
+    PartyI,
     util::{build_error_message}
 };
-use twoRatchet::ratchfuncs::{state};
+
+use twoRatchet::ED::{EDRatchet};
 
 use rand::{rngs::StdRng, Rng,SeedableRng};
 
+use rand_core::{OsRng};
 use x25519_dalek_ng::{PublicKey,StaticSecret};
 
-const LEN : usize = 50;
 
 const SUITE_I: u8 = 3;
 const METHOD_TYPE_I : u8 = 0;
-const DHR_CONST : u16 = 4;
+const DHR_CONST : u16 = 256;
 
 const I_STATIC_MATERIAL :[u8;32] = [154, 31, 220, 202, 59, 128, 114, 237, 96, 201, 
 18, 178, 29, 143, 85, 133, 70, 32, 155, 41, 124, 
 111, 51, 127, 254, 98, 103, 99, 0, 38, 102, 4];
 
-const R_STATIC_MATERIAL : [u8;32]= [245, 156, 136, 87, 191, 59, 207, 135, 191, 100, 46,
+const R_STATIC_PK : [u8;32]= [245, 156, 136, 87, 191, 59, 207, 135, 191, 100, 46,
 213, 24, 152, 151, 45, 141, 35, 185, 103, 168, 73, 74, 
 231, 37, 220, 227, 42, 68, 62, 196, 109];
 
@@ -79,6 +54,7 @@ const DEVEUI : [u8;8] = [0x1,1,2,3,2,4,5,7];
 const APPEUI : [u8;8] = [0,1,2,3,4,5,6,7];
 
 
+const ED_KID : [u8;1]=  [0xA2];
 
 
 
@@ -87,27 +63,20 @@ const SSID: &str = env!("RUST_ESP32_STD_DEMO_WIFI_SSID");
 #[cfg(not(feature = "qemu"))]
 const PASS: &str = env!("RUST_ESP32_STD_DEMO_WIFI_PASS");
 
-#[cfg(esp32s2)]
-include!(env!("EMBUILD_GENERATED_SYMBOLS_FILE"));
-
-#[cfg(esp32s2)]
-const ULP: &[u8] = include_bytes!(env!("EMBUILD_GENERATED_BIN_FILE"));
 
 
 
 fn main() -> Result<()> {
 
+
+    // initialize wifi stack
     esp_idf_sys::link_patches();
-
-
     #[allow(unused)]
     let netif_stack = Arc::new(EspNetifStack::new()?);
     #[allow(unused)]
     let sys_loop_stack = Arc::new(EspSysLoopStack::new()?);
     #[allow(unused)]
     let default_nvs = Arc::new(EspDefaultNvs::new()?);
-
-
     #[allow(clippy::redundant_clone)]
     #[cfg(not(feature = "qemu"))]
     #[allow(unused_mut)]
@@ -120,172 +89,196 @@ fn main() -> Result<()> {
 
    match TcpStream::connect("192.168.1.227:8888") {
         Ok(mut stream) => {
-        handle_connection(stream)
+        handle_connection(&mut stream)
         }
         Err(e) => {
-            bail!("no succes");
+            panic!("Could not connect to server {}", e);
         }
-    };
+    }?;
 
 
     Ok(())
 }
 
 
-fn handle_connection(mut stream: TcpStream)-> Result<(), Error>   {
-    let i_kid = [0xA2].to_vec();
-    let i_static_priv = StaticSecret::from(I_STATIC_MATERIAL);
-    let i_static_pub = PublicKey::from(&i_static_priv);
-    let r_static_pub = PublicKey::from(R_STATIC_MATERIAL);
-    // select a connection identifier
-    let i_c_i = [0x1].to_vec();
-    let i_c_i_cpy = i_c_i.clone();
-    // create ehpemeral key material 
-    let mut r : StdRng = StdRng::from_entropy();
-    let i_ephemeral_keying = r.gen::<[u8;32]>();
+fn handle_connection(stream: &mut TcpStream)-> Result<(), Error>   {
 
-    let msg1_sender =
-    PartyI::new(DEVEUI.to_vec(), APPEUI.to_vec(), i_ephemeral_keying, i_static_priv, i_static_pub, i_kid);
-
-    let (msg1_bytes, msg2_receiver) =
-    // If an error happens here, we just abort. No need to send a message,
-    // since the protocol hasn't started yet.
-    msg1_sender.generate_message_1(METHOD_TYPE_I, SUITE_I).unwrap();
-    // adding mtype
-    let mut payload1 = [0].to_vec();
-    payload1.extend(msg1_bytes);
-    // sending msg1
-    stream.write(&payload1).unwrap();
-
-    let mut buf = [0;128];
-    let bytes_read = stream.read(&mut buf)?;
-    let msg2 = &buf[0..bytes_read];
-
-    // checking mtype for message 2
-    if msg2[0] != 1 {
-        let err = build_error_message("bad mtype");
-        stream.write(&err)?;
-        return Ok(())
-
-    }
-    let devaddr = &msg2[1..5];
-    let msg2 = &msg2[5..];
-    println!("msg2 {:?} ", msg2);
-    
-    let  (r_kid, ad_r,msg2_verifier) = match msg2_receiver.unpack_message_2_return_kid(msg2.to_vec()){
-        Err(OwnOrPeerError::PeerError(s)) => {
-            return Ok(())
-        }
-        Err(OwnOrPeerError::OwnError(b)) => {
-            stream.write(&b)?;// in this case, return this errormessage
-            return Ok(())
-        } 
-        Ok(val) => val,
-    }; 
-    
-    // I has now received the r_kid, such that the can retrieve the static key of r, and verify the first message
-
-    let msg3_sender = match msg2_verifier.verify_message_2(&r_static_pub.as_bytes().to_vec()) {
-        Err(OwnError(b)) => {
-            stream.write(&b)?;
-            return Ok(())},
-        Ok(val) => val, };
-
-    // now that the fields of message 2 has been fully verified, I can generate message 3
-    
-    let (msg4_receiver_verifier, msg3_bytes) =
-        match msg3_sender.generate_message_3() {
-            Err(OwnError(b)) => {
-                panic!("Send these bytes: {}", hexstring(&b))},
-            Ok(val) => val,
-        };
-
-    // sending message 2
-    let mut payload3 = [2].to_vec();
-    payload3.extend(msg3_bytes);
-    stream.write(&payload3)?;
-
-
-    let mut buf = [0;128];
-    // read message 1
-    let bytes_read = stream.read(&mut buf)?;
-    let msg4 = &buf[0..bytes_read];
-    println!("msg4 {:?}", msg4);
-
-    if msg4[0] != 3 {
-        let err = build_error_message("bad mtype");
-        stream.write(&err)?;
-        return Ok(())
-    }
-    let msg4 = msg4[1..].to_vec();
-    let out = msg4_receiver_verifier.receive_message_4(msg4);
-    let out = match out {
-        Err(OwnOrPeerError::PeerError(s)) => {
-            panic!("Received error msg: {}", s)
-        }
-        Err(OwnOrPeerError::OwnError(b)) => {
-            panic!("Send these bytes: {}", hexstring(&b))
-        }
-        Ok(val) => val,
+    // perform join procedure
+    let (ed_sck, ed_rck, ed_rk,devaddr) =  match join_procedure(stream) {
+        Some(join_output) => join_output,
+        None => return Ok(())
     };
-    let (ed_sck,ed_rck,ed_rk) = out;
-
-    let  mut i_ratchet = state::init_i(ed_rk.try_into().unwrap(),ed_rck.try_into().unwrap(), ed_sck.try_into().unwrap(),devaddr.to_vec());
+    // initialize ratchet
+    let  mut ratchet = EDRatchet::new(ed_rk.try_into().unwrap(),ed_rck.try_into().unwrap(), ed_sck.try_into().unwrap(),devaddr.to_vec(),OsRng);
     
-    for n in 1..18000 {
+
+    // running continous communications, with a 1 second thread sleep 
+    // For every iteration, a uplink message is sent, and the 
+    stream.set_read_timeout(Some(Duration::from_millis(5000))).expect("Could not set a read timeout");
+    loop {
         thread::sleep(Duration::from_millis(1000));
-        let uplink = i_ratchet.ratchet_encrypt_payload(&[1;34], &devaddr);
-        stream.write_all(&uplink);
-        stream.flush();
+        let uplink = ratchet.ratchet_encrypt_payload(&[1;34], &devaddr);
+        stream.write_all(&uplink)?;
+        stream.flush()?;
         
 
-
-        if i_ratchet.fcnt_send >= DHR_CONST{
-            stream.set_read_timeout(None).unwrap();
-            let dhr_req = i_ratchet.i_initiate_ratch();
-            stream.write_all(&dhr_req);
-            stream.flush();
+        if ratchet.fcnt_up >= DHR_CONST{
+            let dhr_req = ratchet.initiate_ratch();
+            stream.write_all(&dhr_req)?;
+            stream.flush()?;
+            let mut buf = [0;64];
             let bytes_read = match stream.read(&mut buf){
-                Ok(bytes) => bytes,
+                Ok(bytes) => {bytes},
                 _ => continue,
             };
             let dhr_ack = &buf[0..bytes_read];
-            match i_ratchet.i_receive(dhr_ack.to_vec()) {
-                Some(x) => {println!("receiving message from server {:?}", x)},
-                None => {
-                    continue},
+            match ratchet.receive(dhr_ack.to_vec()) {
+                Ok(x) => match x {
+                    Some(x) => println!("receiving message from server {:?}", x),
+                    None => continue
+                }
+                Err(s) => {
+                println!("error during receive {}",s);
+                continue}
             };
-        }  else {
-            thread::sleep(Duration::from_millis(1000));
-            /*
-            stream.set_read_timeout(Some(Duration::from_millis(3000))).unwrap();
+        }  
+        else {
             // if we do not want to send a DHReq, then we'll just listen for a message
+            let mut buf = [0;64];
             let bytes_read = match stream.read(&mut buf) {
                 Ok(bytes) => bytes,
                 _ => continue,
             };
             let downlink = &buf[0..bytes_read]; // if this is not the dhrack, it will still be decrypted and handled
-            match i_ratchet.i_receive(downlink.to_vec()) {
-                Some(x) => {println!("receiving message from server {:?}", x)},
-                None => continue,
-            };*/
+            match ratchet.receive(downlink.to_vec()) {
+                Ok(x) => match x {
+                    Some(x) => println!("receiving message from server {:?}", x),
+                    None => continue
+                }
+                Err(s) => {
+                println!("error during receive {}",s);
+                continue}
+            };
         }
     }
 
-    return Ok(())
 
 }
 
+fn join_procedure( stream: &mut TcpStream) -> Option<(Vec<u8>, Vec<u8>,Vec<u8>,Vec<u8>)>{
+    // The ED first creates keys, and generates initial state for sending
+    let ed_static_priv = StaticSecret::from(I_STATIC_MATERIAL);
+    let ed_static_pub = PublicKey::from(&ed_static_priv);
+
+   
+    let mut r : StdRng = StdRng::from_entropy();
+    let ed_ephemeral_keying = r.gen::<[u8;32]>();
+
+    let msg1_sender =
+        PartyI::new(DEVEUI.to_vec(), APPEUI.to_vec(), ed_ephemeral_keying, ed_static_priv, ed_static_pub, ED_KID.to_vec());
+
+    let (msg1_bytes, msg2_receiver) =
+        msg1_sender.generate_message_1(METHOD_TYPE_I, SUITE_I).unwrap();
+
+    let mut fcnt_up = 0;
+
+    // The ED then prepares the first message into a appropriate phypayload, and send it
+
+    let mut phypayload0 = prepare_edhoc_message(0, fcnt_up, None, msg1_bytes);
+    fcnt_up += 1;
+    stream.write(&phypayload0).expect("error during write");
+
+    // The second message is now received from the AS, checked for mtype, and the phypayload fields are extracted
+    let mut buf = [0;128];
+    let bytes_read = stream.read(&mut buf).expect("error during read");
+    let phypayload1 = &buf[0..bytes_read];
+
+    if phypayload1[0] != 1 {
+        let err = build_error_message("bad mtype");
+        stream.write(&err).expect("error during write");
+        return None
+    }
+    let msg2 = extract_edhoc_message(phypayload1)?;
+    let devaddr= msg2.devaddr;
+
+    // The ED extracts the kid from message 2
+    
+    let  (kid, appeui,msg2_verifier) = match msg2_receiver.unpack_message_2_return_kid(msg2.edhoc_msg){
+        Err(OwnOrPeerError::PeerError(s)) => {
+            println!("received error {} in message 2, shutting down", s);
+            return None
+        }
+        Err(OwnOrPeerError::OwnError(b)) => {
+            stream.write(&b).expect("error during write");// in this case, return this errormessage
+            return None
+        } 
+        Ok(val) => val,
+    }; 
+
+    if APPEUI.to_vec() != appeui {
+        return None
+    }
+    
+    
+    // With the kid, the ED can now retrieve the public static key and verify message 2
+    let as_static_pub = PublicKey::from(R_STATIC_PK);
+    let msg3_sender = 
+        match msg2_verifier.verify_message_2(as_static_pub.as_bytes()) {
+            Err(OwnError(b)) => {
+                stream.write(&b).expect("error during write");
+                return None},
+            Ok(val) => val, };
 
 
-fn hexstring(slice: &[u8]) -> String {
-    String::from("0x")
-        + &slice
-            .iter()
-            .map(|n| format!("{:02X}", n))
-            .collect::<Vec<String>>()
-            .join(", 0x")
+    
+    // now that the fields of message 2 has been fully verified, the ED can generate message 3
+    
+    let (msg4_receiver_verifier, msg3_bytes) =
+        match msg3_sender.generate_message_3() {
+            Err(OwnError(b)) => {
+                stream.write(&b).expect("error during write");
+                return None},
+            Ok(val) => val,
+        };
+
+    // Packing message 3 into a phypayload and sending it
+    let phypayload2 = prepare_edhoc_message(2, fcnt_up, Some(devaddr), msg3_bytes);
+    fcnt_up += 1;
+    stream.write(&phypayload2).expect("error during write");
+
+
+    // read message 4
+
+    let mut buf = [0;128];
+
+    let bytes_read = stream.read(&mut buf).expect("error during read");
+    let phypayload3 = &buf[0..bytes_read];
+
+    if phypayload3[0] != 3 {
+        let err = build_error_message("bad mtype");
+        stream.write(&err).expect("error during write");
+        return None
+    }
+    let msg4 = extract_edhoc_message(phypayload3)?;
+    let out = msg4_receiver_verifier.handle_message_4(msg4.edhoc_msg);
+
+
+    let (ed_sck,ed_rck,ed_rk) = match out {
+        Err(OwnOrPeerError::PeerError(s)) => {
+            println!("received error {} in message 4, shutting down", s);
+            return None
+        }
+        Err(OwnOrPeerError::OwnError(b)) => {
+            stream.write(&b).expect("error during write");
+            return None
+        }
+        Ok(val) => val,
+    };
+
+    Some((ed_sck,ed_rck,ed_rk, devaddr.to_vec()))
 }
+
+
 
 
 
@@ -350,7 +343,7 @@ fn wifi(
 
         ping(&ip_settings)?;
     } else {
-        bail!("Unexpected Wifi status: {:?}", status);
+        println!("Unexpected Wifi status: {:?}", status);
     }
 
     Ok(wifi)
@@ -363,10 +356,11 @@ fn ping(ip_settings: &ipv4::ClientSettings) -> Result<()> {
     let ping_summary =
         ping::EspPing::default().ping(ip_settings.subnet.gateway, &Default::default())?;
     if ping_summary.transmitted != ping_summary.received {
-        bail!(
+        println!(
             "Pinging gateway {} resulted in timeouts",
             ip_settings.subnet.gateway
         );
+        main();
     }
 
     println!("Pinging done");
@@ -375,3 +369,33 @@ fn ping(ip_settings: &ipv4::ClientSettings) -> Result<()> {
 }
 
 
+struct EdhocMessage {
+    m_type: u8,
+    fcntup: [u8; 2],
+    devaddr: [u8; 4],
+    edhoc_msg: Vec<u8>,
+}
+
+fn prepare_edhoc_message(mtype : u8, fcnt : u16,devaddr : Option<[u8;4]>, edhoc_msg:Vec<u8> ) -> Vec<u8> {
+    let mut buffer : Vec<u8> = Vec::with_capacity(7+edhoc_msg.len());
+    buffer.extend_from_slice(&[mtype]);
+    buffer.extend_from_slice(&fcnt.to_be_bytes());
+    if devaddr != None {
+        buffer.extend_from_slice(&devaddr.unwrap())
+    };
+    buffer.extend_from_slice(&edhoc_msg);
+
+    buffer
+}
+fn extract_edhoc_message(msg: &[u8]) -> Option<EdhocMessage> {
+    let m_type = msg[0];
+    let fcntup = msg[1..3].try_into().ok()?;
+    let devaddr = msg[3..7].try_into().ok()?;
+    let edhoc_msg = msg[7..].try_into().ok()?;
+    Some(EdhocMessage {
+      m_type,
+      fcntup,
+      devaddr,
+      edhoc_msg
+    })
+  }

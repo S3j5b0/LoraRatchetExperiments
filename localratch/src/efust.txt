@@ -1,0 +1,136 @@
+#![allow(clippy::single_component_path_imports)]
+//#![feature(backtrace)]
+
+#[cfg(all(feature = "qemu", not(esp32)))]
+compile_error!("The `qemu` feature can only be built for the `xtensa-esp32-espidf` target.");
+
+#[cfg(all(feature = "ip101", not(esp32)))]
+compile_error!("The `ip101` feature can only be built for the `xtensa-esp32-espidf` target.");
+
+#[cfg(all(feature = "kaluga", not(esp32s2)))]
+compile_error!("The `kaluga` feature can only be built for the `xtensa-esp32s2-espidf` target.");
+
+#[cfg(all(feature = "ttgo", not(esp32)))]
+compile_error!("The `ttgo` feature can only be built for the `xtensa-esp32-espidf` target.");
+
+#[cfg(all(feature = "heltec", not(esp32)))]
+compile_error!("The `heltec` feature can only be built for the `xtensa-esp32-espidf` target.");
+
+#[cfg(all(feature = "esp32s3_usb_otg", not(esp32s3)))]
+compile_error!(
+    "The `esp32s3_usb_otg` feature can only be built for the `xtensa-esp32s3-espidf` target."
+);
+extern crate  alloc;
+use rand::{rngs};
+use std::ffi::c_void;
+use std::io::{Read, Write};
+use std::net::{TcpListener, TcpStream};
+use std::{cell::RefCell, env,  sync::Arc, thread, time::*};
+use std::convert::TryInto;
+use anyhow::bail;
+
+
+use embedded_svc::httpd::*;
+use embedded_svc::ipv4;
+use embedded_svc::ping::Ping;
+
+use embedded_svc::wifi::*;
+use embedded_svc::storage::*;
+
+use esp_idf_svc::netif::*;
+use esp_idf_svc::nvs::*;
+use esp_idf_svc::ping;
+use esp_idf_svc::sysloop::*;
+
+use esp_idf_svc::wifi::*;
+
+use esp_idf_hal::prelude::*;
+use esp_idf_svc::nvs_storage::*;
+
+use esp_idf_sys::{self};
+
+use oscore::edhoc::{
+    error::{OwnError, OwnOrPeerError},
+    PartyI, PartyR,
+    util::{build_error_message}
+};
+use twoRatchet::ratchfuncs::{state};
+
+use rand::{rngs::StdRng, Rng,SeedableRng};
+
+use x25519_dalek_ng::{PublicKey,StaticSecret};
+
+const LEN : usize = 50;
+
+const SUITE_I: isize = 3;
+const METHOD_TYPE_I : isize = 0;
+const DHR_CONST : u16 = 40;
+
+const I_STATIC_MATERIAL :[u8;32] = [154, 31, 220, 202, 59, 128, 114, 237, 96, 201, 
+18, 178, 29, 143, 85, 133, 70, 32, 155, 41, 124, 
+111, 51, 127, 254, 98, 103, 99, 0, 38, 102, 4];
+
+const R_STATIC_MATERIAL : [u8;32]= [245, 156, 136, 87, 191, 59, 207, 135, 191, 100, 46,
+213, 24, 152, 151, 45, 141, 35, 185, 103, 168, 73, 74, 
+231, 37, 220, 227, 42, 68, 62, 196, 109];
+
+
+
+
+
+
+
+
+
+
+#[cfg(esp32s2)]
+include!(env!("EMBUILD_GENERATED_SYMBOLS_FILE"));
+
+#[cfg(esp32s2)]
+const ULP: &[u8] = include_bytes!(env!("EMBUILD_GENERATED_BIN_FILE"));
+
+use  hex;
+fn main() -> Result<()> {
+
+    esp_idf_sys::link_patches();
+    
+    #[allow(unused)]
+    let default_nvs = Arc::new(EspDefaultNvs::new()?);
+     
+    let mut storage =  match EspNvsStorage::new_default(default_nvs, "storage", true) {
+        Ok(x) => x,
+        Err(x) => panic!("no"),
+    };
+
+  /*  match storage.put_raw("key", [1,2,3,4]) {
+        Ok(true) => println!("putting was succesfull"),
+        Ok(false ) => println!("putting was false"),
+        Err(_) => println!("error happende")
+    }*/
+
+    println!("doen thgis");
+    let get = match storage.get_raw("key") {
+        Ok(v) => v,
+        Err(_) => panic!("errror duting get")
+    };
+
+    
+  
+    Ok(())
+}
+
+
+
+
+fn hexstring(slice: &[u8]) -> String {
+    String::from("0x")
+        + &slice
+            .iter()
+            .map(|n| format!("{:02X}", n))
+            .collect::<Vec<String>>()
+            .join(", 0x")
+}
+
+
+
+

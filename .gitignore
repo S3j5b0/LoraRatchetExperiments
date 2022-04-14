@@ -2,8 +2,13 @@
 /esp32client/.vscode
 /esp32client/.espressif
 /esp32client/.embuild
+/esp32client/target/
 donk
 /esp32client/target
 /esp32client/Cargo.lock
 /server/target/debug
+/localratch/.embuild
+/localratch/.ionide
+/localratch/target
+
 **/*.rs.bk

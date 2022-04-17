@@ -17,10 +17,9 @@ use oscore::edhoc::{
 use rand_core::{RngCore,Error,CryptoRng};
 
 use x25519_dalek_ng::{PublicKey,StaticSecret};
-use embedded_svc::storage::{Storage};
 const SUITE_I: u8 = 3;
 const METHOD_TYPE_I : u8 = 0;
-const DHR_CONST : u16 = 1;
+const DHR_CONST : u16 = 64;
 
 const ED_STATIC_MATERIAL :[u8;32] = [154, 31, 220, 202, 59, 128, 114, 237, 96, 201, 
 18, 178, 29, 143, 85, 133, 70, 32, 155, 41, 124, 
@@ -34,10 +33,7 @@ const APPEUI : [u8;8] = [0,1,2,3,4,5,6,7];
 
 fn main() {
 
-    let nvs1 = esp_idf_svc::nvs::EspDefaultNvs::new().unwrap();
-    let nvs  = esp_idf_svc::nvs_storage::EspNvsStorage::new_default(Arc::new(nvs1),"nvs",true).unwrap();
 
-    nvs.put_raw("whatever", vec![1,2]);
         /*
     Parti I generate message 1
     */
@@ -105,7 +101,7 @@ fn main() {
         Ok(val) => val,
     };
 
-    let devaddr = [2,56,45,12].to_vec();
+    let devaddr = [2,56,45,12];
 
     /*///////////////////////////////////////////////////////////////////////////
     /// Initiator receiving and handling message 2, and then generating message 3, and the rck/sck
@@ -209,19 +205,17 @@ fn main() {
 
     loop {
         thread::sleep(Duration::from_millis(1000));
-        let payload = ed_ratchet.ratchet_encrypt_payload(&[2;3], &devaddr);
-        println!("encryprypeed");
+        let payload = ed_ratchet.ratchet_encrypt_payload(&[2;3]);
 
-        let dh_ack = match  as_ratchet.receive(payload) {
-            Some((x,b)) => println!("AS recevied message {:?}", x),
-            None => println!("an erorr occurred"), // in this case, do nothing
+        match  as_ratchet.receive(payload) {
+            Ok((x,b)) => println!("AS recevied message {:?}", x),
+            Err(s) => println!("an eror occurred"), 
         };  
         if DHR_CONST <= ed_ratchet.fcnt_up {
-            println!("ratch");
             let dhr_req = ed_ratchet.initiate_ratch();
             let dh_ack = match  as_ratchet.receive(dhr_req) {
-                Some((x,b)) => x,
-                None => continue 
+                Ok((x,b)) => x,
+                Err(s) => continue 
             };
             let _ = ed_ratchet.receive(dh_ack);
         } 
@@ -248,19 +242,12 @@ struct HRNG;
 impl CryptoRng  for HRNG{}
 impl RngCore for HRNG {
     fn next_u32(&mut self) -> u32 {
-        let mut n : u32 = 0;
-        unsafe {
-           n = esp_idf_sys::esp_random();
-        }
-        n
+        unsafe { esp_idf_sys::esp_random() }
     }
+    
 
     fn next_u64(&mut self) -> u64 {
-        let mut n : u32 = 0;
-        unsafe {
-           n = esp_idf_sys::esp_random();
-        }
-        n.try_into().unwrap()
+        unsafe { esp_idf_sys::esp_random().try_into().unwrap() }
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
